@@ -49,6 +49,18 @@ public class CommandClass implements CommandExecutor, TabCompleter {
                             }
                         } else if (Objects.equals(args[0], "notifications")) {
                             databaseManager.UpdateNotificationsEnabled(player.getName());
+                        } else if (Objects.equals(args[0], "delete")){
+                            if(player.isOp()) {
+                                if (args.length == 2) {
+                                    try {
+                                        databaseManager.deleteREP(Integer.parseInt(args[1]), player.getName());
+                                        player.sendMessage(plugin.colorize("&e&l" + args[1] + "&e has been deleted"));
+
+                                    } catch (NumberFormatException nfe) {
+                                        player.sendMessage(plugin.colorize("&e&l" + args[1] + "&e is not a valid number"));
+                                    }
+                                }
+                            }
                         }
                     }
                 }

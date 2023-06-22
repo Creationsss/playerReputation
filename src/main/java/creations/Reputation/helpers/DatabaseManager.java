@@ -404,6 +404,9 @@ public class DatabaseManager {
                     }
 
                 }
+            }else {
+                Player player = Bukkit.getPlayer(getUUIDFromName(sender));
+                player.sendMessage(plugin.colorize("&eThat is not a existing ID"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
