@@ -1,0 +1,9 @@
+name: playerReputation
+version: 1.0
+main: creations.Reputation.main
+api-version: 1.19
+
+commands:
+  reputation:
+    description: main prefix for inner commands
+    usage: /<command>

@@ -1,0 +1,9 @@
+host: host
+port: 0
+database: database
+username: username
+password: password
+table: table
+
+RepCooldown: 86400 #In Seconds -- current 24h
+IgnoreCoolDown: creations.reputation.IgnoreCD
