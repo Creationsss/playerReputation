@@ -1,14 +1,14 @@
 package creations.Reputation;
 
-import creations.Reputation.helpers.CommandClass;
-import creations.Reputation.helpers.ConfigClass;
-import creations.Reputation.helpers.DatabaseManager;
-import creations.Reputation.helpers.EventListener;
+import creations.Reputation.helpers.*;
+import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SingleLineChart;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 public class main extends JavaPlugin {
 
@@ -20,11 +20,27 @@ public class main extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        new DatabaseManager().Disabled = true;
+        DatabaseManager.Disabled = true;
+    }
+
+    public void addAPIS(){
+        int pluginId = 18863;
+        Metrics metrics = new Metrics(this, pluginId);
+
+        metrics.addCustomChart(new SingleLineChart("servers", new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 1;
+            }
+        }));
+
+        if(Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null){
+            new PlaceholderAPIClass().register();
+        }
     }
 
     public void reloadPlugin(){
-        new DatabaseManager().Disabled = false;
+        DatabaseManager.Disabled = false;
         ConfigClass configClass = new ConfigClass();
 
         this.reloadConfig();
@@ -42,10 +58,11 @@ public class main extends JavaPlugin {
         this.getServer().getPluginManager().registerEvents(new EventListener(), this);
         configClass.CheckConfig();
         if(configClass.checkConfig()) {
-            if(!new DatabaseManager().Disabled) {
+            if(!DatabaseManager.Disabled) {
                 ReturnSQLDatabase().startSQLConnection();
             }
         }
+        addAPIS();
     }
 
     public static String colorize(String message) {

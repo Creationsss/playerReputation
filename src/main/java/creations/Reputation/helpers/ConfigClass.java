@@ -16,7 +16,6 @@ import java.util.logging.Level;
 
 public class ConfigClass {
     main plugin = main.getPlugin(main.class);
-    DatabaseManager databaseManager = new DatabaseManager();
 
     private File customConfigFile;
     private FileConfiguration customConfig;

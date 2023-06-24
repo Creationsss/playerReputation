@@ -476,6 +476,89 @@ public class DatabaseManager {
         return null;
     }
 
+    public List<String> topPlayer(){
+        ArrayList<Integer> TopPlayerCount = new ArrayList<>();
+        try {
+            Connection connection = getConnectionSql();
+            PreparedStatement getPlayer = connection.prepareStatement("SELECT * FROM " + this.table + " WHERE PosRep=?");
+            PreparedStatement GetBestRated = connection.prepareStatement("SELECT * FROM " + this.table);
+            ResultSet results = GetBestRated.executeQuery();
+
+            while (results.next()){
+                int PositiveRep = results.getInt("PosRep");
+                TopPlayerCount.add(PositiveRep);
+            }
+
+            getPlayer.setString(1, Integer.toString(Collections.max(TopPlayerCount)));
+            results = getPlayer.executeQuery();
+
+            if(results.next()){
+                String uuid = results.getString("UUID");
+                String name = results.getString("Name");
+                int PositiveRep = results.getInt("PosRep");
+                int NegativeRep = results.getInt("NegRep");
+                int overall = PositiveRep - NegativeRep;
+                String standing;
+
+                if (overall > 0) {
+                    standing = "In good standing";
+                } else if (overall < 0) {
+                    standing = "In bad standing";
+                } else {
+                    standing = "In neutral standing";
+                }
+
+                return Arrays.asList(Integer.toString(PositiveRep), Integer.toString(NegativeRep), Integer.toString(overall), standing, uuid, name);
+            }
+
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    public int getSentCount(String version){
+        try {
+            Connection connection = this.getConnectionSql();
+            PreparedStatement statement = connection.prepareStatement("SELECT count(*) FROM " + this.table + "_reasons");
+            ResultSet results = statement.executeQuery();
+
+            PreparedStatement statementALL = connection.prepareStatement("SELECT * FROM " + this.table + "_reasons");
+            ResultSet  statementALLResults =  statementALL.executeQuery();
+
+            switch (version) {
+                case "all" -> {
+                    if (results.next()) {
+                        return results.getInt(1);
+                    }
+                }
+                case "positive" -> {
+                    int count = 0;
+                    while (statementALLResults.next()) {
+                        String polarity = statementALLResults.getString("Rep");
+                        if (polarity.equals("Positive")) {
+                            count++;
+                        }
+                    }
+                    return count;
+                }
+                case "negative" -> {
+                    int count = 0;
+                    while (statementALLResults.next()) {
+                        String polarity = statementALLResults.getString("Rep");
+                        if (polarity.equals("Negative")) {
+                            count++;
+                        }
+                    }
+                    return count;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 
 
     List<String> GetAllReputationPlayerInfo(String player) {

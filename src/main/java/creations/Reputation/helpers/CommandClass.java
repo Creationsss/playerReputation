@@ -1,6 +1,7 @@
 package creations.Reputation.helpers;
 
 import creations.Reputation.main;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
