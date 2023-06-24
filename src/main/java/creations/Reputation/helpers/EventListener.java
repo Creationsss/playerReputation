@@ -27,7 +27,6 @@ import java.util.logging.Level;
 public class EventListener implements Listener {
     main plugin = main.getPlugin(main.class);
     DatabaseManager databaseManager = new DatabaseManager();
-
     static int currentPage = 0;
     static int PageCount = 0;
     static int currentMenu = 0;
@@ -42,11 +41,12 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent PJ) {
-        Player player = PJ.getPlayer();
-        UUID PlayerUUID = player.getUniqueId();
-        Boolean bol = new ConfigClass().checkConfig();
-        plugin.getLogger().log(Level.INFO, bol.toString());
-        databaseManager.createPlayer(PlayerUUID, player);
+        if(!databaseManager.Disabled) {
+            Player player = PJ.getPlayer();
+            UUID PlayerUUID = player.getUniqueId();
+            Boolean bol = new ConfigClass().checkConfig();
+            databaseManager.createPlayer(PlayerUUID, player);
+        }
     }
 
     @EventHandler
@@ -58,6 +58,9 @@ public class EventListener implements Listener {
         Player LocalizedSender = (Player) staticItems.get(2);
         String LocalizedPlayer = (String) staticItems.get(0);
 
+        Material backButton = ConfigClass.backButton;
+        Material nextButton = ConfigClass.nextButton;
+
         Conversation s = getConversationFactory().withFirstPrompt(new ConversationClass()).thatExcludesNonPlayersWithMessage("Cannot Be used Inside the console").withLocalEcho(false).buildConversation(player);
         if (clickedInventory == null) {
             return;
@@ -67,75 +70,71 @@ public class EventListener implements Listener {
         if (clickedItem == null) {
             return;
         }
-        if (e.getView().getTitle().equals("Reputation Menu")) {
-            switch (clickedItem.getType()) {
-                case LIME_WOOL:
-                    databaseManager.SetStaticCurrentInfo(null, "Positively", null, null, null);
-                    s.begin();
-                    e.getView().close();
-                    break;
-                case RED_WOOL:
-                    databaseManager.SetStaticCurrentInfo(null, "Negatively", null, null, null);
-                    s.begin();
-                    e.getView().close();
-                    break;
-                case BOOK:
-                    allReputationPlayerGUI(LocalizedSender, LocalizedPlayer, 0);
-                    break;
-                case PAPER:
-                    allReputationPlayerSentGUI(LocalizedSender, LocalizedPlayer, 0);
-                    break;
-                case BOOKSHELF:
-                    allPlayerREPSGUI(player,0);
-            }
-            e.setCancelled(true);
-        } else if (e.getView().getTitle().endsWith("reputation")) {
-            switch (clickedItem.getType()) {
-                case ARROW:
-                    String buttonName = clickedItem.getItemMeta().getDisplayName();
-                    currentPage += buttonName.startsWith(ChatColor.GREEN + "Next Page") ? 1 : 0;
-                    currentPage -= buttonName.startsWith(ChatColor.GREEN + "Previous Page") ? 1 : 0;
-                    switch (currentMenu) {
-                        case 0-> allReputationPlayerGUI(player, LocalizedPlayer, currentPage);
-                        case 1-> allReputationPlayerSentGUI(LocalizedSender, LocalizedPlayer, currentPage);
-                    }
-                    break;
-                    
-                case RED_WOOL:
-                    CreateMainGUI(LocalizedSender, LocalizedPlayer);
-                    break;
+        if (e.getView().getTitle().equals(ConfigClass.reputationMenuName)) {
+            Material givenItem = ConfigClass.givenItem;
+            Material sentItem = ConfigClass.sentItem;
+            Material serverSentItem = ConfigClass.serverSentItem;
+            Material positiveButton = ConfigClass.positiveButton;
+            Material negativeButton = ConfigClass.negativeButton;
 
-                case PLAYER_HEAD:
-                    if(e.isRightClick()) {
-                        if (player.isOp()) {
-                            NamespacedKey key = new NamespacedKey(plugin, "repID");
-                            PersistentDataContainer container = clickedItem.getItemMeta().getPersistentDataContainer();
-                            String id = container.get(key, PersistentDataType.STRING);
-                            deleteUI(player, id);
-                        }
-                    }else{
-                        String dn = clickedItem.getItemMeta().getDisplayName();
-                        String playername = dn.substring(dn.lastIndexOf(' ') + 1);
-                        CreateMainGUI(LocalizedSender, playername);
-                    }
+            if(clickedItem.getType().equals(givenItem))
+            {
+                allReputationPlayerGUI(LocalizedSender, LocalizedPlayer, 0);
+            } else if (clickedItem.getType().equals(sentItem)) {
+                allReputationPlayerSentGUI(LocalizedSender, LocalizedPlayer, 0);
+            }else if (clickedItem.getType().equals(serverSentItem)) {
+                allPlayerREPSGUI(player,0);
+            } else if (clickedItem.getType().equals(positiveButton)) {
+                databaseManager.SetStaticCurrentInfo(null, "Positively", null, null, null);
+                s.begin();
+                e.getView().close();
+            }else if (clickedItem.getType().equals(negativeButton)) {
+                databaseManager.SetStaticCurrentInfo(null, "Negatively", null, null, null);
+                s.begin();
+                e.getView().close();
             }
             e.setCancelled(true);
-        } else if (e.getView().getTitle().equals("Players")) {
-            switch (clickedItem.getType()) {
-                case ARROW:
-                    String buttonName = clickedItem.getItemMeta().getDisplayName();
-                    currentPage += buttonName.startsWith(ChatColor.GREEN + "Next Page") ? 1 : 0;
-                    currentPage -= buttonName.startsWith(ChatColor.GREEN + "Previous Page") ? 1 : 0;
-                    allReputationPlayerGUI(player, LocalizedPlayer, currentPage);
-                    break;
-                case RED_WOOL:
-                    CreateMainGUI(LocalizedSender, LocalizedPlayer);
-                    break;
-                case PLAYER_HEAD:
-                    CreateMainGUI(LocalizedSender, clickedItem.getItemMeta().getDisplayName());
+        } else if (e.getView().getTitle().equals(main.replaceValues(ConfigClass.playerReputation,"name" ,Collections.singletonList(LocalizedPlayer))) || (e.getView().getTitle().equals(main.replaceValues(ConfigClass.sentReputation, "name" ,Collections.singletonList(LocalizedPlayer))))) {
+             if (clickedItem.getType().equals(backButton)) {
+                 CreateMainGUI(LocalizedSender, LocalizedPlayer);
+             } else if (clickedItem.getType().equals(nextButton)) {
+                 String buttonName = clickedItem.getItemMeta().getDisplayName();
+                 currentPage += buttonName.startsWith(ChatColor.GREEN + "Next Page") ? 1 : 0;
+                 currentPage -= buttonName.startsWith(ChatColor.GREEN + "Previous Page") ? 1 : 0;
+                 switch (currentMenu) {
+                     case 0-> allReputationPlayerGUI(player, LocalizedPlayer, currentPage);
+                     case 1-> allReputationPlayerSentGUI(LocalizedSender, LocalizedPlayer, currentPage);
+                 }
+             }else if (clickedItem.getType().equals(Material.PLAYER_HEAD)){
+                 if(e.isRightClick()) {
+                     if (player.isOp()) {
+                         NamespacedKey key = new NamespacedKey(plugin, "repID");
+                         PersistentDataContainer container = clickedItem.getItemMeta().getPersistentDataContainer();
+                         String id = container.get(key, PersistentDataType.STRING);
+                         deleteUI(player, id);
+                     }
+                 }else{
+                     String dn = clickedItem.getItemMeta().getDisplayName();
+                     String playername = dn.substring(dn.lastIndexOf(' ') + 1);
+                     CreateMainGUI(LocalizedSender, playername);
+                 }
+             }
+
+            e.setCancelled(true);
+        } else if (e.getView().getTitle().equals(ConfigClass.allReputation)) {
+            if (clickedItem.getType().equals(backButton)) {
+                CreateMainGUI(LocalizedSender, LocalizedPlayer);
+            }else if (clickedItem.getType().equals(nextButton)){
+                String buttonName = clickedItem.getItemMeta().getDisplayName();
+                currentPage += buttonName.startsWith(ChatColor.GREEN + "Next Page") ? 1 : 0;
+                currentPage -= buttonName.startsWith(ChatColor.GREEN + "Previous Page") ? 1 : 0;
+                allReputationPlayerGUI(player, LocalizedPlayer, currentPage);
+            } else if (clickedItem.getType().equals(Material.PLAYER_HEAD)){
+                CreateMainGUI(LocalizedSender, clickedItem.getItemMeta().getDisplayName());
+
             }
             e.setCancelled(true);
-        }else if (e.getView().getTitle().equals("Confirmation Menu")) {
+        }else if (e.getView().getTitle().equals(ConfigClass.confirmationMenuName)) {
             switch (clickedItem.getType()) {
                 case RED_WOOL -> {
                     switch (currentMenu) {
@@ -159,7 +158,8 @@ public class EventListener implements Listener {
     }
 
     public void deleteUI(Player player, String id){
-        Inventory gui = Bukkit.createInventory(player, 9, "Confirmation Menu");
+        Inventory gui = Bukkit.createInventory(player, 9, ConfigClass.confirmationMenuName);
+        Material backButton = ConfigClass.backButton;
 
         List<String> currentIDSET = databaseManager.GetReputationIDInfo(id);
 
@@ -175,7 +175,7 @@ public class EventListener implements Listener {
         deleteConfirmationMeta.getPersistentDataContainer().set(key, PersistentDataType.STRING, id);
         deleteConfirmation.setItemMeta(deleteConfirmationMeta);
 
-        ItemStack cancelDeletion = new ItemStack(Material.RED_WOOL);
+        ItemStack cancelDeletion = new ItemStack(backButton);
         ItemMeta cancelDeletionMeta = cancelDeletion.getItemMeta();
         cancelDeletionMeta.setDisplayName(ChatColor.RED + "Cancel");
         cancelDeletion.setItemMeta(cancelDeletionMeta);
@@ -200,8 +200,15 @@ public class EventListener implements Listener {
     }
 
     public void CreateMainGUI(Player player, String name) {
+        Material givenItem = ConfigClass.givenItem;
+        Material sentItem = ConfigClass.sentItem;
+        Material serverSentItem = ConfigClass.serverSentItem;
+        Material positiveButton = ConfigClass.positiveButton;
+        Material negativeButton = ConfigClass.negativeButton;
+        Material blockedButton = ConfigClass.blockedButton;
+
         List<String> repItems = databaseManager.GetAllReputationPlayerInfo(name);
-        Inventory gui = Bukkit.createInventory(player, 9, "Reputation Menu");
+        Inventory gui = Bukkit.createInventory(player, 9, ConfigClass.reputationMenuName);
 
         UUID uuid = databaseManager.getUUIDFromName(name);
         databaseManager.SetStaticCurrentInfo(name, null, player, null, uuid);
@@ -216,45 +223,46 @@ public class EventListener implements Listener {
         skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(uuid));
         skullMeta.setDisplayName(name);
 
+        String mainGUIHeadMessage = main.replaceValues(ConfigClass.mainGUIHeadMessage, "MainGUIHeadMessage", Arrays.asList(repItems.get(0), repItems.get(1), repItems.get(2), repItems.get(3)));
+
+        String[] SplitMainGUIHeadMessage = mainGUIHeadMessage.split(",");
+
         ArrayList<String> playerLore = new ArrayList<>();
-        playerLore.add("Positive: " + repItems.get(0));
-        playerLore.add("Negative: " + repItems.get(1));
-        playerLore.add("Combined: " + repItems.get(2));
+        for (String item : SplitMainGUIHeadMessage) {
+            playerLore.add(item);
+        }
         skullMeta.setLore(playerLore);
         playerSkull.setItemMeta(skullMeta);
 
-        ItemStack positive = new ItemStack(Material.LIME_WOOL);
+        ItemStack positive = new ItemStack(positiveButton);
         ItemMeta checkmarkMeta = positive.getItemMeta();
-        checkmarkMeta.setDisplayName(ChatColor.GREEN + "Positively rep this player");
+        checkmarkMeta.setDisplayName(ConfigClass.positiveButtonText);
         positive.setItemMeta(checkmarkMeta);
 
-        ItemStack negative = new ItemStack(Material.RED_WOOL);
+        ItemStack negative = new ItemStack(negativeButton);
         ItemMeta negativeMeta = negative.getItemMeta();
-        negativeMeta.setDisplayName(ChatColor.RED + "Negatively rep this player");
+        negativeMeta.setDisplayName(ConfigClass.negativeButtonText);
         negative.setItemMeta(negativeMeta);
 
-        ItemStack AllReputation = new ItemStack(Material.BOOK);
+        ItemStack AllReputation = new ItemStack(givenItem);
         ItemMeta AllReputationMeta = AllReputation.getItemMeta();
-        if (repItems.isEmpty()) {
-            AllReputationMeta.setDisplayName(ChatColor.RED + name + " has no current reputation");
-        }else {
-            AllReputationMeta.setDisplayName(ChatColor.YELLOW + "Check all reputation points given to " + name);
-        }
+        AllReputationMeta.setDisplayName(main.replaceValues(ConfigClass.givenItemText, "name" ,Collections.singletonList(name)));
+
         AllReputation.setItemMeta(AllReputationMeta);
 
-        ItemStack AllReputationSent = new ItemStack(Material.PAPER);
+        ItemStack AllReputationSent = new ItemStack(sentItem);
         ItemMeta AllReputationSentMeta = AllReputationSent.getItemMeta();
-        AllReputationSentMeta.setDisplayName(ChatColor.YELLOW + "Check all reputation points sent by " + name);
+        AllReputationSentMeta.setDisplayName(main.replaceValues(ConfigClass.sentItemText, "name" ,Collections.singletonList(name)));
         AllReputationSent.setItemMeta(AllReputationSentMeta);
 
-        ItemStack AllReputationSERVER = new ItemStack(Material.BOOKSHELF);
+        ItemStack AllReputationSERVER = new ItemStack(serverSentItem);
         ItemMeta AllReputationSERVERMeta = AllReputationSERVER.getItemMeta();
-        AllReputationSERVERMeta.setDisplayName(ChatColor.YELLOW + "Check all current reputation points of the server");
+        AllReputationSERVERMeta.setDisplayName(ConfigClass.serverSentItemText);
         AllReputationSERVER.setItemMeta(AllReputationSERVERMeta);
 
-        ItemStack cannotREP = new ItemStack(Material.BARRIER);
+        ItemStack cannotREP = new ItemStack(blockedButton);
         ItemMeta cannotREPMeta = cannotREP.getItemMeta();
-        cannotREPMeta.setDisplayName(ChatColor.RED + "You cannot rep this player");
+        cannotREPMeta.setDisplayName(ConfigClass.blockedButtonText);
         cannotREP.setItemMeta(cannotREPMeta);
 
         int moveIcons = 3;
@@ -267,13 +275,14 @@ public class EventListener implements Listener {
         if(cooldowns.containsKey(player.getName())) {
             long secondsLeft = ((cooldowns.get(player.getName()) / 1000) + CoolDown) - (System.currentTimeMillis() / 1000);
             int secondsLeftINT = Math.toIntExact(secondsLeft);
-            int hours = secondsLeftINT / 3600;
-            int minutes = (secondsLeftINT % 3600) / 60;
-            int seconds = secondsLeftINT % 60;
+            String hours = Integer.toString(secondsLeftINT / 3600);
+            String minutes = Integer.toString(secondsLeftINT % 3600 / 60);
+            String seconds = Integer.toString(secondsLeftINT % 60);
 
-            ItemStack LampINFO = new ItemStack(Material.BARRIER);
+            ItemStack LampINFO = new ItemStack(blockedButton);
             ItemMeta LampINFOMeta = LampINFO.getItemMeta();
-            LampINFOMeta.setDisplayName(ChatColor.RED + "You cannot rep someone for another " + hours + "H " + minutes + "M " + seconds + "S");
+            String localString = main.replaceValues(ConfigClass.timerMessage,"Time", Arrays.asList(hours, minutes, seconds));
+            LampINFOMeta.setDisplayName(localString);
             LampINFO.setItemMeta(LampINFOMeta);
 
             if(!LocalizedPlayer.equals(LocalizedSender.getName())) {
@@ -295,7 +304,6 @@ public class EventListener implements Listener {
         }else {
             if(!LocalizedPlayer.equals(LocalizedSender.getName())) {
                 Boolean db = databaseManager.CanRepPlayer(LocalizedPlayer, LocalizedSender);
-                plugin.getLogger().log(Level.INFO, db.toString());
                 if(databaseManager.CanRepPlayer(name, player))
                 {
                     gui.setItem(7, positive);
@@ -322,8 +330,9 @@ public class EventListener implements Listener {
         int pageSize = (currentPage > 0) ? 51 : 52;
         PageCount = (int) Math.ceil(AllReputationList.size() / (double) pageSize);
 
-        Inventory gui = Bukkit.createInventory(player, 54, name + " reputation");
-
+        Material backButton = ConfigClass.backButton;
+        Material nextButton = ConfigClass.nextButton;
+        Inventory gui = Bukkit.createInventory(player, 54, main.replaceValues(ConfigClass.playerReputation, "name" ,Collections.singletonList(name)));
 
         int startIndex = currentPage * pageSize;
         startIndex = Math.max(startIndex, 0);
@@ -344,17 +353,22 @@ public class EventListener implements Listener {
             meta.setOwningPlayer(Bukkit.getOfflinePlayer(playerUUID));
             meta.setDisplayName("Sent by " + playerName);
 
+            String mainGUIHeadMessage = main.replaceValues(ConfigClass.playersGivenGUIHeadMessage, "playerREP", Arrays.asList(polarity, repID, reason));
+
+            String[] SplitMainGUIHeadMessage = mainGUIHeadMessage.split(",");
+
             ArrayList<String> playerLore = new ArrayList<>();
-            playerLore.add(polarity);
-            playerLore.add("ID: " + repID);
-            playerLore.add("Reason: " + reason);
+            for (String item : SplitMainGUIHeadMessage) {
+                playerLore.add(item);
+            }
+
             meta.setLore(playerLore);
             playerskull.setItemMeta(meta);
 
             gui.addItem(playerskull);
         }
         if (currentPage > 0) {
-            ItemStack previousPageItem = new ItemStack(Material.ARROW);
+            ItemStack previousPageItem = new ItemStack(nextButton);
             ItemMeta previousPageMeta = previousPageItem.getItemMeta();
             previousPageMeta.setDisplayName(ChatColor.GREEN + "Previous Page");
             ArrayList<String> skullLore = new ArrayList<>();
@@ -366,7 +380,7 @@ public class EventListener implements Listener {
             gui.setItem(slot, previousPageItem);
         }
         if (currentPage < PageCount - 1) {
-            ItemStack nextPageItem = new ItemStack(Material.ARROW);
+            ItemStack nextPageItem = new ItemStack(nextButton);
             ItemMeta nextPageMeta = nextPageItem.getItemMeta();
             nextPageMeta.setDisplayName(ChatColor.GREEN + "Next Page");
             ArrayList<String> skullLore = new ArrayList<>();
@@ -376,9 +390,9 @@ public class EventListener implements Listener {
             nextPageItem.setItemMeta(nextPageMeta);
             gui.setItem(52, nextPageItem);
         }
-        ItemStack backToMenu = new ItemStack(Material.RED_WOOL);
+        ItemStack backToMenu = new ItemStack(backButton);
         ItemMeta backToMenuMeta = backToMenu.getItemMeta();
-        backToMenuMeta.setDisplayName(ChatColor.RED + "Back to Reputation Screen");
+        backToMenuMeta.setDisplayName(ConfigClass.backButtonText);
         backToMenu.setItemMeta(backToMenuMeta);
         gui.setItem(53, backToMenu);
         player.openInventory(gui);
@@ -393,8 +407,9 @@ public class EventListener implements Listener {
         int pageSize = (currentPage > 0) ? 51 : 52;
         PageCount = (int) Math.ceil(AllReputationList.size() / (double) pageSize);
 
-        Inventory gui = Bukkit.createInventory(player, 54, name + " sent reputation");
-
+        Inventory gui = Bukkit.createInventory(player, 54, main.replaceValues(ConfigClass.sentReputation, "name" ,Collections.singletonList(name)));
+        Material backButton = ConfigClass.backButton;
+        Material nextButton = ConfigClass.nextButton;
 
         int startIndex = currentPage * pageSize;
         startIndex = Math.max(startIndex, 0);
@@ -425,7 +440,7 @@ public class EventListener implements Listener {
             gui.addItem(playerskull);
         }
         if (currentPage > 0) {
-            ItemStack previousPageItem = new ItemStack(Material.ARROW);
+            ItemStack previousPageItem = new ItemStack(nextButton);
             ItemMeta previousPageMeta = previousPageItem.getItemMeta();
             previousPageMeta.setDisplayName(ChatColor.GREEN + "Previous Page");
             ArrayList<String> skullLore = new ArrayList<>();
@@ -437,7 +452,7 @@ public class EventListener implements Listener {
             gui.setItem(slot, previousPageItem);
         }
         if (currentPage < PageCount - 1) {
-            ItemStack nextPageItem = new ItemStack(Material.ARROW);
+            ItemStack nextPageItem = new ItemStack(nextButton);
             ItemMeta nextPageMeta = nextPageItem.getItemMeta();
             nextPageMeta.setDisplayName(ChatColor.GREEN + "Next Page");
             ArrayList<String> skullLore = new ArrayList<>();
@@ -447,9 +462,9 @@ public class EventListener implements Listener {
             nextPageItem.setItemMeta(nextPageMeta);
             gui.setItem(52, nextPageItem);
         }
-        ItemStack backToMenu = new ItemStack(Material.RED_WOOL);
+        ItemStack backToMenu = new ItemStack(backButton);
         ItemMeta backToMenuMeta = backToMenu.getItemMeta();
-        backToMenuMeta.setDisplayName(ChatColor.RED + "Back to Reputation Screen");
+        backToMenuMeta.setDisplayName(ConfigClass.backButtonText);
         backToMenu.setItemMeta(backToMenuMeta);
         gui.setItem(53, backToMenu);
         player.openInventory(gui);
@@ -472,8 +487,12 @@ public class EventListener implements Listener {
         }
         int startIndex = currentPage * pageSize;
         startIndex = Math.max(startIndex, 0);
+
         int endIndex = Math.min(startIndex + pageSize, allPlayerReps.size());
-        Inventory gui = Bukkit.createInventory(player, 54, "Players");
+        Material backButton = ConfigClass.backButton;
+        Material nextButton = ConfigClass.nextButton;
+
+        Inventory gui = Bukkit.createInventory(player, 54, ConfigClass.allReputation);
         for (int i = startIndex; i < endIndex; i++) {
             String uuid = allPlayerReps.get(i).get(0);
             String currname = allPlayerReps.get(i).get(1);
@@ -481,21 +500,27 @@ public class EventListener implements Listener {
             String negrep = allPlayerReps.get(i).get(3);
             String overall = allPlayerReps.get(i).get(4);
             String standing = allPlayerReps.get(i).get(5);
+
+
             ItemStack playerskull = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) playerskull.getItemMeta();
             meta.setOwningPlayer(Bukkit.getOfflinePlayer(UUID.fromString(uuid)));
             meta.setDisplayName(currname);
+
+            String mainGUIHeadMessage = main.replaceValues(ConfigClass.playersGUIHeadMessage, "MainGUIHeadMessage", Arrays.asList(posrep, negrep, overall, standing));
+
+            String[] SplitMainGUIHeadMessage = mainGUIHeadMessage.split(",");
+
             ArrayList<String> playerLore = new ArrayList<>();
-            playerLore.add("Positive: " + posrep);
-            playerLore.add("Negative: " + negrep);
-            playerLore.add("Combined: " + overall);
-            playerLore.add("Standing: " + standing);
+            for (String item : SplitMainGUIHeadMessage) {
+                playerLore.add(item);
+            }
             meta.setLore(playerLore);
             playerskull.setItemMeta(meta);
             gui.addItem(playerskull);
         }
         if (currentPage > 0) {
-            ItemStack previousPageItem = new ItemStack(Material.ARROW);
+            ItemStack previousPageItem = new ItemStack(nextButton);
             ItemMeta previousPageMeta = previousPageItem.getItemMeta();
             previousPageMeta.setDisplayName(ChatColor.GREEN + "Previous Page");
             ArrayList<String> skullLore = new ArrayList<>();
@@ -507,7 +532,7 @@ public class EventListener implements Listener {
             gui.setItem(slot, previousPageItem);
         }
         if (currentPage < PageCount - 1) {
-            ItemStack nextPageItem = new ItemStack(Material.ARROW);
+            ItemStack nextPageItem = new ItemStack(nextButton);
             ItemMeta nextPageMeta = nextPageItem.getItemMeta();
             nextPageMeta.setDisplayName(ChatColor.GREEN + "Next Page");
             ArrayList<String> skullLore = new ArrayList<>();
@@ -517,9 +542,9 @@ public class EventListener implements Listener {
             nextPageItem.setItemMeta(nextPageMeta);
             gui.setItem(52, nextPageItem);
         }
-        ItemStack backToMenu = new ItemStack(Material.RED_WOOL);
+        ItemStack backToMenu = new ItemStack(backButton);
         ItemMeta backToMenuMeta = backToMenu.getItemMeta();
-        backToMenuMeta.setDisplayName(ChatColor.RED + "Back to Reputation Screen");
+        backToMenuMeta.setDisplayName(ConfigClass.backButtonText);
         backToMenu.setItemMeta(backToMenuMeta);
         gui.setItem(53, backToMenu);
         player.openInventory(gui);

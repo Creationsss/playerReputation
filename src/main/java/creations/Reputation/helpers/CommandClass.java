@@ -36,7 +36,7 @@ public class CommandClass implements CommandExecutor, TabCompleter {
                 }
                 if(isPlayer(sender)) {
                     Player player = (Player) sender;
-                    if (check) {
+                    if (check || !databaseManager.Disabled) {
                         if (Objects.equals(args[0], "menu")) {
                             if (args.length == 2) {
                                 if (databaseManager.playerExistsName(args[1])) {

@@ -11,6 +11,8 @@ import java.util.logging.Level;
 public class DatabaseManager {
     main plugin = main.getPlugin(main.class);
 
+    public static boolean Disabled = false;
+
     private Connection connection;
     private String host;
     private String database;
@@ -29,8 +31,6 @@ public class DatabaseManager {
 
 
     public static HashMap<String, Long> giveRepCoolDowns = new HashMap<>();
-    boolean check = new ConfigClass().checkConfig();
-
     private void setSQLValues(){
         ConfigClass configClass = new ConfigClass();
         List<String> values = configClass.GetSQLValues();
@@ -58,27 +58,31 @@ public class DatabaseManager {
     }
 
     private void startSQLDriver() {
-        try {
-            Class.forName("com.mysql.jdbc.Driver");
-            String connectionString = "jdbc:mysql://" + host + ":" + port + "/" + database + "?autoReconnect=true";
-            connection = DriverManager.getConnection(connectionString, username, password);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Failed to load MySQL driver.", e);
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Couldn't connect to the given SQL database please fix and reload");
-            Bukkit.getPluginManager().disablePlugin(plugin);
+        if(!Disabled) {
+            try {
+                Class.forName("com.mysql.jdbc.Driver");
+                String connectionString = "jdbc:mysql://" + host + ":" + port + "/" + database + "?autoReconnect=true";
+                connection = DriverManager.getConnection(connectionString, username, password);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("Failed to load MySQL driver.", e);
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Couldn't connect to the given SQL database please fix and reload");
+                Disabled = true;
+            }
         }
     }
 
     public void createSQLTables() {
-        try {
-            PreparedStatement mainTable = this.getConnectionSql().prepareStatement("CREATE TABLE IF NOT EXISTS " + this.table + " (UUID TEXT, Name TEXT, PosRep INT, NegRep INT, RepIDLists TEXT, repSENT TEXT, getNotifications BIT)");
-            mainTable.executeUpdate();
+        if(!Disabled) {
+            try {
+                PreparedStatement mainTable = this.getConnectionSql().prepareStatement("CREATE TABLE IF NOT EXISTS " + this.table + " (UUID TEXT, Name TEXT, PosRep INT, NegRep INT, RepIDLists TEXT, repSENT TEXT, getNotifications BIT)");
+                mainTable.executeUpdate();
 
-            PreparedStatement reasonsTable = this.getConnectionSql().prepareStatement("CREATE TABLE IF NOT EXISTS " + this.table + "_reasons" +  " (RepID INT, giverUUID TEXT, giverName TEXT, playerNAME TEXT, PlayerUUID TEXT, reason TEXT, Rep TEXT)");
-            reasonsTable.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+                PreparedStatement reasonsTable = this.getConnectionSql().prepareStatement("CREATE TABLE IF NOT EXISTS " + this.table + "_reasons" + " (RepID INT, giverUUID TEXT, giverName TEXT, playerNAME TEXT, PlayerUUID TEXT, reason TEXT, Rep TEXT)");
+                reasonsTable.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 

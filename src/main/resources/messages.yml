@@ -1,0 +1,38 @@
+#usefull links,
+#https://codepen.io/0biwan/pen/ggVemP --Change text colors
+#https://www.digminecraft.com/lists/item_id_list_pc.php -- block id list
+#https://www.spigotmc.org/resources/player-reputations.110679/field?field=documentation -- plugin documentation
+
+#gui names
+reputation-menu-name: "Reputation menu"
+player-reputation-name: "[name] reputation"
+sent-reputation-name: "[name] Sent reputation"
+all-reputation-name: "Players"
+confirmation-menu-name: "Confirmation Menu"
+
+#mainGUI
+given-to-player: "BOOK"
+sent-by-player: "PAPER"
+server-rep-list: "BOOKSHELF"
+
+given-to-player-text: "&eCheck all reputation points given to [name]"
+sent-by-player-text: "&eCheck all reputation points sent by [name]"
+server-rep-list-text: "&eCheck all current reputation points of the server"
+
+playerDisplayHead-message: "&6Positive: &a[positive],&6Negative: &4[negative],&6Combined: &7[combined],&6Standing: &b[standing]"
+
+#all
+back-button: "RED_WOOL"
+nextOrPrevious-button: "ARROW"
+positive-button: "LIME_WOOL"
+negative-button: "RED_WOOL"
+unable-toRep: "BARRIER"
+
+positive-button-text: "&aPositively rep this player"
+negative-button-text: "&4Negatively rep this player"
+unable-toRep-text: "&4You cannot rep this player"
+back-button-text: "&4Back to reputation screen"
+
+repTimer-message: "&4You cannot rep someone for another [hours]H [minutes]M [seconds]S"
+server-rep-list-playerDisplayHead-message: "&6Positive: &a[positive],&6Negative: &4[negative],&6Combined: &7[combined],&6Standing: &b[standing]"
+player-reputation-playerDisplayHead-message: "[polarity],ID: [repid],Reason: [reason]"
